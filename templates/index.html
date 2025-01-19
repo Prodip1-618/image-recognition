@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker-Style Chatbot Interface</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #00FF00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #chat-container {
+            width: 50%;
+            max-width: 800px;
+            border: 1px solid #00FF00;
+            padding: 20px;
+            box-shadow: 0 0 10px #00FF00;
+        }
+        #chatbox {
+            width: 100%;
+            height: 400px;
+            background-color: #111;
+            padding: 10px;
+            overflow-y: auto;
+            border: 1px solid #00FF00;
+        }
+        #chat-input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            background-color: #111;
+            color: #00FF00;
+            border: 1px solid #00FF00;
+            margin-top: 10px;
+        }
+        #submit-btn, #upload-btn {
+            background-color: #111;
+            color: #00FF00;
+            border: 1px solid #00FF00;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: calc(50% - 11px);
+        }
+        #submit-btn:hover, #upload-btn:hover {
+            background-color: #00FF00;
+            color: #000;
+        }
+        .user-message, .bot-message {
+            padding: 5px;
+            margin: 5px 0;
+        }
+        .user-message {
+            text-align: right;
+            color: #00FF00;
+        }
+        .bot-message {
+            text-align: left;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chatbox"></div>
+        <input type="file" id="image-input" accept="image/*" style="display:none;">
+        <input type="text" id="chat-input" placeholder="Type your message...">
+        <div style="display: flex; justify-content: space-between;">
+            <button id="submit-btn">Send</button>
+            <button id="upload-btn">Upload Image</button>
+        </div>
+    </div>
+
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const chatInput = document.getElementById('chat-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const imageInput = document.getElementById('image-input');
+
+        submitBtn.addEventListener('click', async () => {
+            const message = chatInput.value;
+            if (message) {
+                appendMessage('user-message', message);
+                const response = await sendMessage(message, null);
+                appendMessage('bot-message', response);
+                chatInput.value = '';
+            }
+        });
+
+        uploadBtn.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', async () => {
+            const file = imageInput.files[0];
+            if (file) {
+                appendMessage('user-message', '[Image uploaded]');
+                const response = await sendMessage('', file);
+                appendMessage('bot-message', response);
+            }
+        });
+
+        function appendMessage(className, message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = className;
+            messageElement.innerText = message;
+            chatbox.appendChild(messageElement);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        async function sendMessage(message, file) {
+            const formData = new FormData();
+            formData.append('message', message);
+            if (file) {
+                formData.append('image', file);
+            }
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            return data.response;
+        }
+    </script>
+</body>
+</html>
